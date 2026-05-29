@@ -96,11 +96,11 @@
   .panel-full { grid-column: 1 / -1; }
 
   .panel-label {
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 500;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--dim);
+    color: var(--muted);
     margin-bottom: 16px;
   }
 
@@ -231,8 +231,8 @@
   }
 
   .metric.accent-border { border-color: rgba(200,240,74,0.3); }
-  .metric.blue-border { border-color: rgba(91,156,246,0.3); }
-  .metric.green-border { border-color: rgba(78,207,160,0.3); }
+  .metric.blue-border { border-color: rgba(167,139,250,0.4); }
+  .metric.green-border { border-color: rgba(251,191,36,0.4); }
 
   .metric-label {
     font-size: 10px;
@@ -434,8 +434,41 @@
 
   </div>
 
+  <!-- Regions + breakdown -->
+  <div class="grid">
+
+    <div class="panel">
+      <div class="panel-label">Units by region</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <p style="font-size:11px;color:var(--dim);max-width:260px;">Edit any value manually, or recalculate all other regions from US/Canada.</p>
+        <button onclick="recalcFromUS()" style="background:var(--accent-dim);border:0.5px solid var(--accent);color:var(--accent);font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;">&#8635; Recalc from US</button>
+      </div>
+      <div class="regions-grid" id="regionsGrid"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">Units Breakdown</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Region</th>
+              <th>Price</th>
+              <th>Units</th>
+              <th>Gross</th>
+              <th>Dev net</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot id="tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
   <!-- Tax panel -->
-  <div class="panel panel-full" style="margin-bottom:16px;">
+  <div class="panel panel-full" style="margin-top:16px;margin-bottom:16px;">
     <div class="panel-label">Corporate tax — company jurisdiction</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px 32px;">
       <div>
@@ -490,39 +523,6 @@
     <p style="font-size:10px;color:var(--dim);margin-top:12px;line-height:1.6;">⚠ Tax figures are simplified estimates for planning purposes only. Actual liability depends on deductible expenses, profit margins, local rules, transfer pricing, and your accountant's advice. VAT/GST on digital goods is typically collected and remitted by Steam (Valve) — it is not an additional cost to you.</p>
   </div>
 
-  <!-- Regions + breakdown -->
-  <div class="grid">
-
-    <div class="panel">
-      <div class="panel-label">Units by region</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <p style="font-size:11px;color:var(--dim);max-width:260px;">Edit any value manually, or recalculate all other regions from US/Canada.</p>
-        <button onclick="recalcFromUS()" style="background:var(--accent-dim);border:0.5px solid var(--accent);color:var(--accent);font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;">&#8635; Recalc from US</button>
-      </div>
-      <div class="regions-grid" id="regionsGrid"></div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-label">Breakdown</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Region</th>
-              <th>Price</th>
-              <th>Units</th>
-              <th>Gross</th>
-              <th>Dev net</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-          <tfoot id="tfoot"></tfoot>
-        </table>
-      </div>
-    </div>
-
-  </div>
-
   <footer>
     <p style="margin-bottom:16px;"><strong style="color:var(--muted);">Disclaimer:</strong> Unit sales projections are illustrative estimates based on approximate Steam market share ratios. They are not predictions and will vary significantly by genre, localization, marketing, and timing. Tax figures are simplified estimates — actual liability depends on expenses, profit margins, and local rules. This tool is for planning purposes only.</p>
 
@@ -545,7 +545,7 @@
       </div>
     </div>
     <div style="border-top:0.5px solid var(--border);padding-top:14px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <span style="font-size:11px;color:var(--dim);">Built with <a href="https://claude.ai" target="_blank" rel="noopener" style="color:var(--dim);text-decoration:underline;text-underline-offset:3px;">Claude</a> by Anthropic — figures are estimates only, not financial or legal advice.</span>
+      <span style="font-size:11px;color:var(--dim);">Made by <a href="https://gurbsgurbs.com" target="_blank" rel="noopener" style="color:var(--dim);text-decoration:underline;text-underline-offset:3px;">Gurbs</a>, built with <a href="https://claude.ai" target="_blank" rel="noopener" style="color:var(--dim);text-decoration:underline;text-underline-offset:3px;">Claude</a> by Anthropic — figures are estimates only, not financial or legal advice.</span>
     </div>
   </footer>
 
@@ -800,9 +800,12 @@ function calc() {
   document.getElementById('taxIpNet').textContent = taxRate > 0 ? fmt(ipAfterTax) : '—';
   document.getElementById('taxDevNet').textContent = taxRate > 0 ? fmt(devAfterTax) : '—';
 
+  const totalTax = (ipShare + devShare) * taxRate;
+  const totalDevNetAfterTax = totalDevNet * (1 - taxRate);
+
   const hasTax = taxRate > 0;
   document.getElementById('metrics').innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;">
       <div class="metric">
         <div class="metric-label">Total units sold</div>
         <div class="metric-val">${totalUnits.toLocaleString()}</div>
@@ -818,12 +821,17 @@ function calc() {
         <div class="metric-val muted">${fmt(steamTake)}</div>
         <div class="metric-sub">platform fee</div>
       </div>
+      <div class="metric">
+        <div class="metric-label">Taxes (est. ${hasTax ? Math.round(taxRate*100) + '%' : '—'})</div>
+        <div class="metric-val muted">${hasTax ? fmt(totalTax) : '—'}</div>
+        <div class="metric-sub">${hasTax ? 'on dev net' : 'select country'}</div>
+      </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;">
       <div class="metric">
         <div class="metric-label">Total dev net</div>
-        <div class="metric-val">${fmt(totalDevNet)}</div>
-        <div class="metric-sub">after Steam cut</div>
+        <div class="metric-val">${fmt(hasTax ? totalDevNetAfterTax : totalDevNet)}</div>
+        <div class="metric-sub">${hasTax ? 'after Steam + tax' : 'after Steam cut'}</div>
       </div>
       <div class="metric blue-border">
         <div class="metric-label">IP / Publisher</div>
