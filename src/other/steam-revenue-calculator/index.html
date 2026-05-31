@@ -499,14 +499,23 @@
             <span id="taxCitRate" style="font-size:18px;font-weight:500;color:var(--text);"></span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:baseline;">
-            <span style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;">Effective rate (est.)</span>
-            <span id="taxEffRate" style="font-size:13px;color:var(--muted);"></span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;">
             <span style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;">VAT / GST (sales, not your cost)</span>
             <span id="taxVat" style="font-size:13px;color:var(--muted);"></span>
           </div>
         </div>
+
+        <div style="margin-top:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;">Effective rate used</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button id="taxResetBtn" onclick="resetTaxSlider()" style="display:none;background:transparent;border:0.5px solid var(--dim);color:var(--muted);font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:5px;cursor:pointer;">↩ Reset</button>
+              <span id="taxSliderVal" style="font-size:16px;font-weight:500;color:var(--text);min-width:42px;text-align:right;">—</span>
+            </div>
+          </div>
+          <input type="range" id="taxSlider" min="0" max="100" value="0" step="1" oninput="onTaxSlider()"
+            style="width:100%;appearance:none;height:3px;border-radius:2px;outline:none;cursor:pointer;background:var(--bg3);">
+        </div>
+
         <div style="margin-top:14px;background:var(--bg3);border-radius:var(--radius);padding:12px 14px;">
           <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Estimated tax on dev net</div>
           <div style="display:flex;justify-content:space-between;">
@@ -642,6 +651,35 @@ const TAX_COUNTRIES = [
 
 // --- Searchable dropdown ---
 let taxSelectedIdx = 0;
+let taxSliderOverride = false;
+
+function updateTaxSliderUI(val) {
+  const slider = document.getElementById('taxSlider');
+  slider.value = val;
+  const pct = (val / 100 * 100).toFixed(1) + '%';
+  slider.style.background = `linear-gradient(to right, var(--accent) ${pct}, var(--bg3) ${pct})`;
+  document.getElementById('taxSliderVal').textContent = val + '%';
+}
+
+function onTaxSlider() {
+  const val = parseInt(document.getElementById('taxSlider').value);
+  document.getElementById('taxSliderVal').textContent = val + '%';
+  const slider = document.getElementById('taxSlider');
+  const pct = (val / 100 * 100).toFixed(1) + '%';
+  slider.style.background = `linear-gradient(to right, var(--accent) ${pct}, var(--bg3) ${pct})`;
+  const c = TAX_COUNTRIES[taxSelectedIdx];
+  taxSliderOverride = (c.eff !== null && val !== c.eff) || (c.eff === null && val !== 0);
+  document.getElementById('taxResetBtn').style.display = (taxSliderOverride && taxSelectedIdx > 0) ? 'inline-block' : 'none';
+  calc();
+}
+
+function resetTaxSlider() {
+  const c = TAX_COUNTRIES[taxSelectedIdx];
+  taxSliderOverride = false;
+  document.getElementById('taxResetBtn').style.display = 'none';
+  updateTaxSliderUI(c.eff !== null ? c.eff : 0);
+  calc();
+}
 
 function buildTaxDropdown() {
   renderTaxList('');
@@ -692,22 +730,23 @@ function filterTax() {
 
 function onTaxSelect(idx) {
   taxSelectedIdx = idx;
+  taxSliderOverride = false;
+  document.getElementById('taxResetBtn').style.display = 'none';
   const c = TAX_COUNTRIES[idx];
   const label = c.flag ? c.flag + ' ' + c.name : c.name;
   document.getElementById('taxSelectedLabel').textContent = label;
   document.getElementById('taxAppliesTo').textContent = c.appliesTo || '—';
   document.getElementById('taxNote').textContent = c.note || '';
   document.getElementById('taxCitRate').textContent = c.cit !== null ? c.cit + '%' : '—';
-  document.getElementById('taxEffRate').textContent = c.eff !== null ? '~' + c.eff + '%' : '—';
   document.getElementById('taxVat').textContent = c.vat !== null ? c.vat + '%' : '—';
+  updateTaxSliderUI(c.eff !== null ? c.eff : 0);
   calc();
 }
 
 function onTaxChange() { onTaxSelect(taxSelectedIdx); }
 
 function getTaxRate() {
-  const c = TAX_COUNTRIES[taxSelectedIdx];
-  return c.eff !== null ? c.eff / 100 : 0;
+  return parseInt(document.getElementById('taxSlider').value) / 100;
 }
 
 
