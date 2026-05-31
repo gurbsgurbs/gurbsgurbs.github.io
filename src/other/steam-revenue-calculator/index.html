@@ -444,6 +444,10 @@
         <button onclick="recalcFromUS()" style="background:var(--accent-dim);border:0.5px solid var(--accent);color:var(--accent);font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;">&#8635; Recalc from US</button>
       </div>
       <div class="regions-grid" id="regionsGrid"></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:12px;border-top:0.5px solid var(--border);">
+        <span style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;">Total units</span>
+        <span id="totalUnitsInline" style="font-size:16px;font-weight:500;color:var(--text);">—</span>
+      </div>
     </div>
 
     <div class="panel">
@@ -456,7 +460,6 @@
               <th>Price</th>
               <th>Units</th>
               <th>Gross</th>
-              <th>Dev net</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -839,6 +842,8 @@ function calc() {
   document.getElementById('taxIpNet').textContent = taxRate > 0 ? fmt(ipAfterTax) : '—';
   document.getElementById('taxDevNet').textContent = taxRate > 0 ? fmt(devAfterTax) : '—';
 
+  document.getElementById('totalUnitsInline').textContent = totalUnits.toLocaleString();
+
   const totalTax = (ipShare + devShare) * taxRate;
   const totalDevNetAfterTax = totalDevNet * (1 - taxRate);
 
@@ -891,7 +896,6 @@ function calc() {
       <td class="muted">${fmtP(r.price)}</td>
       <td class="muted">${r.units.toLocaleString()}</td>
       <td>${fmt(r.gross)}</td>
-      <td>${fmt(r.devNet)}</td>
     </tr>
   `).join('');
 
@@ -901,7 +905,6 @@ function calc() {
       <td class="muted">—</td>
       <td class="muted">${totalUnits.toLocaleString()}</td>
       <td class="accent">${fmt(totalGross)}</td>
-      <td>${fmt(totalDevNet)}</td>
     </tr>
   `;
 }
