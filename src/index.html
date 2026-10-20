@@ -1,5 +1,329 @@
-<html>
-    <body>
-        <p>Hello... world...</p>
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gurbs</title>
+<meta name="description" content="Designer venturing into gamedev, using Godot as my main tool.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=National+Park:wght@200..800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --lilac-light: #d3bff3;
+    --lilac: #bfa2ea;
+    --lilac-dark: #9671d1;
+    --card: #fff;
+    --text: #004a43;
+    --text-soft: #0e7a6c;
+    --muted: #6f8f8a;
+    --line: rgba(60,30,100,0.10);
+    --gap: 24px;
+    --radius: 26px;
+  }
+
+  html {
+    min-height: 100%;
+    background: linear-gradient(160deg, var(--lilac-light) 0%, var(--lilac) 45%, var(--lilac-dark) 100%) fixed;
+    color: var(--text);
+  }
+  body {
+    font-family: "National Park", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .page {
+    display: flex;
+    gap: 64px;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 64px 48px;
+  }
+
+  .profile {
+    flex: 1;
+    min-width: 240px;
+    position: sticky;
+    top: 64px;
+    align-self: flex-start;
+  }
+
+  .avatar {
+    position: relative;
+    width: 184px;
+    height: 184px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f3ecfd, var(--lilac-dark));
+    border: 4px solid #fff;
+    box-shadow: 0 10px 30px rgba(50,20,90,0.25);
+    display: grid;
+    place-items: center;
+    font-size: 72px;
+    font-weight: 700;
+    color: #fff;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  h1 {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 12px;
+  }
+  .bio { font-size: 19px; font-weight: 500; color: var(--text); max-width: 340px; }
+
+  main {
+    flex-shrink: 0;
+    width: calc(4 * 175px + 3 * var(--gap));
+    container-type: inline-size;
+  }
+
+  .grid {
+    --cell: calc((100cqi - 3 * var(--gap)) / 4);
+    display: grid;
+    grid-template-columns: repeat(4, var(--cell));
+    grid-auto-rows: var(--cell);
+    grid-auto-flow: dense;
+    gap: var(--gap);
+  }
+
+  .tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 22px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 8px rgba(50,20,90,0.10);
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .tile:hover {
+    transform: translateY(-2px) rotate(-0.6deg);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.07);
+  }
+  .tile.wide { grid-column: span 2; }
+  .tile.big { grid-column: span 2; grid-row: span 2; }
+
+  .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    margin-bottom: 12px;
+    border: 1px solid var(--line);
+  }
+  .icon img { width: 22px; height: 22px; filter: invert(1); }
+  .icon svg { width: 22px; height: 22px; }
+
+  .name { font-weight: 700; font-size: 15px; }
+  .handle { color: var(--muted); font-size: 13px; font-weight: 500; }
+
+  .btn {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 700;
+    align-self: flex-start;
+  }
+
+  .tile.big .name { font-size: 22px; font-weight: 800; }
+  .tile.big .desc { color: var(--text-soft); margin-top: 6px; max-width: 280px; }
+  .tile.big .shot {
+    margin-top: auto;
+    height: 52%;
+    border-radius: 14px;
+    background: url(img/banner.jpg) center / cover;
+  }
+
+  .tile.text {
+    justify-content: flex-end;
+    background: #111;
+    color: #fff;
+    border-color: #111;
+  }
+  .tile.text .handle { color: #999; }
+
+  .tile.media { flex-direction: row; padding: 0; }
+  .tile.media .caption {
+    flex: 1;
+    min-width: 0;
+    padding: 22px;
+  }
+  .tile.media .thumb {
+    display: block;
+    height: 100%;
+    width: auto;
+    aspect-ratio: 630 / 500;
+    flex-shrink: 0;
+    border-left: 1px solid var(--line);
+  }
+  .tile.media .thumb.square { aspect-ratio: 1; }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 56px 0 20px;
+  }
+  main > h2:first-child { margin-top: 0; }
+
+  footer {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 48px 32px;
+    text-align: right;
+  }
+  footer span {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 99px;
+    background: rgba(255,255,255,0.6);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  @media (max-width: 1180px) {
+    .page { flex-direction: column; gap: 40px; max-width: 820px; }
+    footer { max-width: 820px; }
+    .profile { position: static; }
+    main { width: 100%; }
+  }
+
+  @media (max-width: 820px) {
+    :root { --gap: 16px; --radius: 22px; }
+    .page { padding: 40px 16px; }
+    footer { padding: 0 16px 24px; }
+    h2 { margin-top: 40px; }
+    main > h2:first-child { margin-top: 0; }
+    .grid {
+      --cell: calc((100cqi - var(--gap)) / 2);
+      grid-template-columns: repeat(2, var(--cell));
+    }
+    .links .tile.wide,
+    .links .tile.big { grid-column: span 1; grid-row: span 1; }
+    .links .tile.big .name { font-size: 15px; font-weight: 700; }
+    .links .tile.big .desc,
+    .links .tile.big .shot { display: none; }
+    .avatar { width: 120px; height: 120px; font-size: 48px; margin-bottom: 24px; }
+    h1 { font-size: 34px; }
+    .bio { font-size: 17px; }
+    .tile { padding: 16px; }
+    .tile.media .caption { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="profile">
+    <div class="avatar">
+      G
+      <img src="img/me.jpg" alt="Gurbs" onerror="this.remove()">
+    </div>
+    <h1>Gurbs</h1>
+    <p class="bio">Designer venturing into gamedev! 🎮 Using Godot as my main tool, with lots of learning and experimentation going on!</p>
+  </div>
+
+  <main>
+    <h2>My Links</h2>
+    <div class="grid links">
+
+      <a class="tile big" href="https://gurbsgurbs.itch.io" target="_blank" rel="noopener">
+        <div class="icon" style="background:#fa5c5c"><img src="https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/itchdotio.svg" alt=""></div>
+        <div class="name">itch.io</div>
+        <div class="handle">gurbsgurbs.itch.io</div>
+        <p class="desc">All my games, jams and prototypes.</p>
+        <div class="shot"></div>
+      </a>
+
+      <a class="tile wide" href="https://github.com/gurbsgurbs" target="_blank" rel="noopener">
+        <div class="icon" style="background:#181717"><img src="https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/github.svg" alt=""></div>
+        <div class="name">GitHub</div>
+        <div class="handle">@gurbsgurbs</div>
+        <span class="btn" style="background:#f2f2f2">Follow</span>
+      </a>
+
+      <a class="tile" href="https://bsky.app/profile/did:plc:o6pywstp7saijif3375fam62" target="_blank" rel="noopener">
+        <div class="icon" style="background:#0285ff"><img src="https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/bluesky.svg" alt=""></div>
+        <div class="name">Bluesky</div>
+        <div class="handle">@gurbsgurbs</div>
+      </a>
+
+      <a class="tile" href="https://youtube.com/@gurbsgurbs" target="_blank" rel="noopener">
+        <div class="icon" style="background:#ff0000"><img src="https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/youtube.svg" alt=""></div>
+        <div class="name">YouTube</div>
+        <div class="handle">@gurbsgurbs</div>
+        <span class="btn" style="background:#ff0000;color:#fff">Subscribe</span>
+      </a>
+
+    </div>
+
+    <h2>My Games</h2>
+    <div class="grid">
+
+      <a class="tile wide media" href="https://gurbsgurbs.itch.io/drop-til-you-shop" target="_blank" rel="noopener">
+        <div class="caption">
+          <div class="icon" style="background:#fa5c5c"><img src="https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/itchdotio.svg" alt=""></div>
+          <div class="name">Drop 'til you Shop</div>
+          <div class="handle">Work in progress</div>
+        </div>
+        <img class="thumb" src="img/drop-til-you-shop.png" alt="Drop 'til you Shop cover">
+      </a>
+
+      <a class="tile wide media" href="https://play.google.com/store/apps/details?id=com.wildquati.eightbirds&amp;hl=en" target="_blank" rel="noopener">
+        <div class="caption">
+          <div class="icon" style="background:#414141"><img src="https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/googleplay.svg" alt=""></div>
+          <div class="name">8 Birds</div>
+          <div class="handle">Puzzle game on Android</div>
+        </div>
+        <img class="thumb square" src="img/8-birds.png" alt="8 Birds icon">
+      </a>
+
+    </div>
+
+    <h2>My Tools</h2>
+    <div class="grid">
+
+      <a class="tile wide media" href="https://gurbsgurbs.itch.io/tween-composer" target="_blank" rel="noopener">
+        <div class="caption">
+          <div class="icon" style="background:#478cbf"><img src="https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/godotengine.svg" alt=""></div>
+          <div class="name">Tween Composer</div>
+          <div class="handle">Plugin for Godot</div>
+        </div>
+        <img class="thumb" src="img/tween-composer.gif" alt="Tween Composer preview">
+      </a>
+
+      <a class="tile wide text" href="/other/steam-revenue-calculator/">
+        <div class="icon" style="background:#1b2838;border-color:#333"><img src="https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/steam.svg" alt=""></div>
+        <div class="name">Steam Revenue Calculator</div>
+        <div class="handle">Estimate what a game makes after Steam's cut</div>
+      </a>
+
+    </div>
+  </main>
+
+</div>
+<footer><span>&copy; 2026 Gurbs</span></footer>
+</body>
 </html>
